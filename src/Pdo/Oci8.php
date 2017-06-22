@@ -447,19 +447,25 @@ class Oci8 extends PDO
      * @param string $charset
      * @throws Oci8Exception
      */
-    private function connect($dsn, $username, $password, array $options, $charset)
-    {
-        if (array_key_exists(PDO::ATTR_PERSISTENT, $options) && $options[PDO::ATTR_PERSISTENT]) {
-            $this->dbh = @oci_pconnect($username, $password, $dsn, $charset);
-        } else {
-            $this->dbh = @oci_connect($username, $password, $dsn, $charset);
-        }
-
-        if (! $this->dbh) {
-            $e = oci_error();
-            throw new Oci8Exception($e['message']);
-        }
+  private function connect($dsn, $username, $password, array $options, $charset)
+  {
+    $session_mode = !empty($options['session_mode']) ? $options['session_mode'] : null;
+    if ($session_mode === OCI_CRED_EXT) {
+      $username = '/';
+      $password = null;
     }
+
+    if (array_key_exists(PDO::ATTR_PERSISTENT, $options) && $options[PDO::ATTR_PERSISTENT]) {
+      $this->dbh = oci_pconnect($username, $password, $dsn, $charset, $session_mode);
+    } else {
+      $this->dbh = oci_connect($username, $password, $dsn, $charset, $session_mode);
+    }
+
+    if (!$this->dbh) {
+      $e = oci_error();
+      throw new Oci8Exception($e['message']);
+    }
+  }
 
     /**
      * Find the charset
