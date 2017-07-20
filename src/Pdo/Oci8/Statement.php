@@ -442,7 +442,10 @@ class Statement extends PDOStatement
 
                 $this->blobBindings[$parameter] = $variable;
 
-                $variable = $this->connection->getNewDescriptor();
+                $descriptor = $this->connection->getNewDescriptor();
+                $descriptor->writeTemporary($variable);
+
+                $variable = $descriptor;
 
                 $this->blobObjects[$parameter] = &$variable;
                 break;
