@@ -191,11 +191,12 @@ class Statement extends PDOStatement
         foreach ($this->bindings as $binding) {
             if (is_object($binding)) {
                 $bindings[] = get_class($binding);
+            } elseif (is_array($binding)) {
+                $bindings[] = '['. implode(',', $bindings) . ']';
             } else {
                 $bindings[] = (string) $binding;
             }
         }
-
         return implode(',', $bindings);
     }
 
@@ -456,7 +457,7 @@ class Statement extends PDOStatement
         }
 
         if (is_array($variable)) {
-            return $this->bindArray($parameter, $variable, $maxLength, $maxLength, $ociType);
+            return $this->bindArray($parameter, $variable, $maxLength, $ociType);
         }
 
         $this->bindings[] = &$variable;
@@ -470,18 +471,17 @@ class Statement extends PDOStatement
      * @see  http://php.net/manual/en/function.oci-bind-array-by-name.php
      * @param string $parameter The Oracle placeholder.
      * @param array $variable An array.
-     * @param int $maxTableLength Sets the maximum length both for incoming and result arrays.
      * @param int $maxItemLength Sets maximum length for array items.
      *                           If not specified or equals to -1, oci_bind_array_by_name() will find
      *                           the longest element in the incoming array and will use it as the maximum length.
      * @param int $type Explicit data type for the parameter using the
      * @return bool TRUE on success or FALSE on failure.
      */
-    public function bindArray($parameter, &$variable, $maxTableLength, $maxItemLength = -1, $type = SQLT_CHR)
+    public function bindArray($parameter, &$variable, $maxItemLength = -1, $type = SQLT_CHR)
     {
         $this->bindings[] = $variable;
 
-        return oci_bind_array_by_name($this->sth, $parameter, $variable, $maxTableLength, $maxItemLength, $type);
+        return oci_bind_array_by_name($this->sth, $parameter, $variable, count($variable), $maxItemLength, $type);
     }
 
     /**
